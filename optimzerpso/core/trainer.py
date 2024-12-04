@@ -176,17 +176,14 @@ class SupervisedTrainerPSO(Trainer):
         particles = [self.model]  
 
         for _ in range(self.num_particles - 1):
-            
-            new_particle = type(self.model)(*self.model.__init__args__)
+            # Crear una nueva instancia del modelo con la misma arquitectura
+            new_particle = type(self.model)().to(self.device)
             new_particle.load_state_dict(self.model.state_dict())
             
             with torch.no_grad():
                 for param in new_particle.parameters():
-
                     std = self.perturbation_factor * torch.std(param.data)
-                    
                     perturbation = torch.randn_like(param.data) * std
-
                     param.data += perturbation
             
             particles.append(new_particle)
@@ -200,6 +197,8 @@ class SupervisedTrainerPSO(Trainer):
             batch: Tuple[torch.Tensor, torch.Tensor] - (data, target) for evaluation
         Returns:
             None - Updates self.model directly
+        Notes:
+            * Falta corregir la parte en la que se actualiza el unchanged_counter_global y el unchanged_counter_local
         """
         data, target = batch
         data, target = data.to(self.device), target.to(self.device)
@@ -234,17 +233,26 @@ class SupervisedTrainerPSO(Trainer):
         global_worst_idx = min(range(len(personal_best_scores)), 
                               key=lambda i: personal_best_scores[i])
         global_worst = particles[global_worst_idx].state_dict()
+        global_worst_score = personal_best_scores[global_worst_idx]
         
         # Counter for early stopping
-        unchanged_counter = 0
+        unchanged_counter_global = 0
         
         # Main PSO loop
         for k in tqdm(range(self.max_iter), desc="PSO", total=self.max_iter):
-            # Early stopping check
-            if unchanged_counter >= self.c:
+            
+            logger.info(f"PSO iteration: {k}, unchanged_counter: {unchanged_counter_global}")
+            
+            if unchanged_counter_global >= self.c:
+                logger.exito(f"Early stopping: {unchanged_counter_global} >= {self.c}")
                 break
             
+            unchanged_counter_local = 0
+
             for i in range(self.num_particles):
+                '''
+                This must be in parallel
+                '''
                 particle = particles[i]
                 
                 # Generate random factors
@@ -254,8 +262,7 @@ class SupervisedTrainerPSO(Trainer):
                 r_w = torch.rand(1).item()
                 
                 # Normalization term
-                C = (r_v * self.phi_v + r_p * self.phi_p + 
-                     r_g * self.phi_g + r_w * self.phi_w)
+                C = (r_v * self.phi_v + r_p * self.phi_p + r_g * self.phi_g + r_w * self.phi_w)
                 
                 # Update velocity and position for each parameter
                 with torch.no_grad():
@@ -280,18 +287,28 @@ class SupervisedTrainerPSO(Trainer):
                 if score > personal_best_scores[i]:
                     personal_best[i] = particle.state_dict()
                     personal_best_scores[i] = score
+                else:
+                    unchanged_counter_local += 1
+                if unchanged_counter_local >= self.c_r:
+                    particle.load_state_dict(personal_best[i])
+                    velocities[i] = torch.zeros_like(velocities[i])
+                    break
                 
                 # Update global best and worst
                 if score > global_best_score:
+                    new_global_best_idx = i
                     global_best = particle.state_dict()
                     global_best_score = score
-                    unchanged_counter = 0
-                else:
-                    unchanged_counter += 1
                 
-                current_worst_idx = min(range(len(personal_best_scores)), 
-                                      key=lambda i: personal_best_scores[i])
-                global_worst = particles[current_worst_idx].state_dict()
+                if score < global_worst_score:
+                    global_worst = particle.state_dict()
+                    global_worst_score = score
+                
+            
+            if new_global_best_idx != global_best_idx:
+                global_best_idx = new_global_best_idx
+            else:
+                unchanged_counter_global += 1
             
             # Step length scheduling
             self.lambda_factor *= self.phi_lambda
@@ -333,7 +350,7 @@ class SupervisedTrainerPSO(Trainer):
 
             if self.step_train % self.interval_pso == 0:
                 batch = next(iter(self.train_loader))
-                logger.exit("Making PSO ...")
+                logger.exito("Making PSO ...")
                 self.pso(batch)
 
     def test_step(self):

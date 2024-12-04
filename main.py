@@ -12,40 +12,56 @@ def get_args():
     # Dataset and basic training parameters
     parser.add_argument("--dataset_name", type=str, default="mnist",
                         help="Dataset to use for training")
+    
     parser.add_argument("--optimizer", type=str, default="adam",
                         choices=['adam', 'sgd'], help="Optimizer type")
+    
     parser.add_argument("--device", type=str, default="cuda:1",
                         choices=['cuda', 'cuda:1', 'cpu'], help="Device to use for training")
+    
     parser.add_argument("--epochs", type=int, default=10,
                         help="Number of training epochs")
+    
     parser.add_argument("--learning_rate", type=float, default=1e-4,
                         help="Learning rate for optimizer")
+    
     parser.add_argument("--batch_size", type=int, default=128,
                         help="Batch size for training")
     
     # PSO specific parameters
     parser.add_argument("--num_particles", type=int, default=20,
                         help="Number of particles in PSO")
+    
     parser.add_argument("--max_iter", type=int, default=50,
                         help="Maximum iterations for PSO")
+    
     parser.add_argument("--lambda_factor", type=float, default=0.95,
                         help="Step length for PSO")
+    
     parser.add_argument("--phi_lambda", type=float, default=0.95,
                         help="Step length schedule factor")
+    
     parser.add_argument("--phi_v", type=float, default=0.7,
                         help="Inertia weight")
+    
     parser.add_argument("--phi_p", type=float, default=1.5,
                         help="Cognitive weight")
+    
     parser.add_argument("--phi_g", type=float, default=1.5,
                         help="Social weight")
+    
     parser.add_argument("--phi_w", type=float, default=2.0,
                         help="Repulsion weight")
+    
     parser.add_argument("--c", type=int, default=10,
                         help="Patience for early stopping")
+    
     parser.add_argument("--c_r", type=int, default=10,
                         help="Restart patience")
+    
     parser.add_argument("--K", type=int, default=10,
                         help="PSO epochs")
+    
     parser.add_argument("--perturbation_factor", type=float, default=0.3,
                         help="Factor for initial particle perturbation")
     
