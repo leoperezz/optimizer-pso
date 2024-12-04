@@ -32,7 +32,7 @@ class Logger:
             return
             
         # Creamos un logger con un nombre específico
-        self.logger = logging.getLogger('thinkact')
+        self.logger = logging.getLogger('optimzerpso')
         self.logger.setLevel(level)
         
         # Removemos handlers existentes para evitar duplicados
@@ -75,3 +75,5 @@ class Logger:
 
     def fire(self, mensaje):
         self.logger.info(f"{self.BRIGHT_RED}🔥 FIRE: {mensaje}{self.RESET}")
+
+logger = Logger()
