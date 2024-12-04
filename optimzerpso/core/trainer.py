@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from abc import ABC, abstractmethod
 import wandb
 from tqdm import tqdm
-from logger import logger
+from .logger import logger
 from typing import List, Tuple
 
 class Trainer(ABC):
