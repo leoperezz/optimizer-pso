@@ -1,0 +1,1 @@
+python ../main.py --dataset mnist --trainer supervised-pso --device cuda:1 --epochs 100 --learning_rate 1e-4 --batch_size 128

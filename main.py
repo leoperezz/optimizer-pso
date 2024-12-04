@@ -10,16 +10,18 @@ def get_args():
                         choices=['supervised', 'supervised-pso'], help="Trainer type")
 
     # Dataset and basic training parameters
-    parser.add_argument("--dataset", type=str, default="mnist",
+    parser.add_argument("--dataset_name", type=str, default="mnist",
                         help="Dataset to use for training")
     parser.add_argument("--optimizer", type=str, default="adam",
                         choices=['adam', 'sgd'], help="Optimizer type")
-    parser.add_argument("--device", type=str, default="cuda",
-                        choices=['cuda', 'cpu'], help="Device to use for training")
+    parser.add_argument("--device", type=str, default="cuda:1",
+                        choices=['cuda', 'cuda:1', 'cpu'], help="Device to use for training")
     parser.add_argument("--epochs", type=int, default=10,
                         help="Number of training epochs")
-    parser.add_argument("--learning_rate", type=float, default=1e-3,
+    parser.add_argument("--learning_rate", type=float, default=1e-4,
                         help="Learning rate for optimizer")
+    parser.add_argument("--batch_size", type=int, default=128,
+                        help="Batch size for training")
     
     # PSO specific parameters
     parser.add_argument("--num_particles", type=int, default=20,
@@ -55,7 +57,8 @@ def main():
     
     wandb.init(project="pso-neural-net", config=vars(args))
 
-    dataset, model, criterion = load_env(args.dataset)
+    dataset, model, criterion = load_env(args.dataset_name,
+                                        args.batch_size)
     
     trainer = load_trainer(args.trainer,
                            model,

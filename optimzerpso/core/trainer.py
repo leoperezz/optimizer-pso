@@ -21,10 +21,6 @@ class Trainer(ABC):
     def train(self):
         pass
 
-    @abstractmethod
-    def test(self):
-        pass
-
     def load_optimizer(self, optimizer: str, learning_rate: float):
         if optimizer == "adam":
             return torch.optim.Adam(self.model.parameters(), lr=learning_rate)
@@ -44,13 +40,12 @@ class SupervisedTrainer(Trainer):
                  criterion:     nn.Module,
                  device:        str,
                  epochs:        int = 10,
-                 learning_rate: float = 1e-3,
-                 **kwargs):
+                 learning_rate: float = 1e-3):
         
         if optimizer not in ["adam", "sgd"]:
             raise ValueError("Optimizer must be either 'adam' or 'sgd'")
 
-        self.model        = model
+        self.model        = model.to(device)
         self.train_loader = train_loader
         self.test_loader  = test_loader
         self.optimizer    = self.load_optimizer(optimizer, learning_rate)
@@ -75,7 +70,7 @@ class SupervisedTrainer(Trainer):
             self.optimizer.zero_grad()
             output = self.model(data)            
             loss   = self.criterion(output, target)
-            wandb.log({"loss_train": loss.item()}, step=self.step_train)
+            wandb.log({"train/loss": loss.item(), "train/step": self.step_train})
             self.step_train += 1
             loss.backward()
             self.optimizer.step()
@@ -95,10 +90,14 @@ class SupervisedTrainer(Trainer):
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 loss   = self.criterion(output, target)
-                wandb.log({"loss_test": loss.item()}, step=self.step_test)
+                wandb.log({"test/loss": loss.item(), "test/step": self.step_test})
                 self.step_test += 1
  
     def train(self):
+        
+        wandb.define_metric("train/loss", step_metric="train/step")
+        wandb.define_metric("test/loss", step_metric="test/step")
+
         for epoch in range(self.epochs):
             logger.worker(f"Epoch {epoch + 1} of {self.epochs}")
             self.train_step()
@@ -137,11 +136,17 @@ class SupervisedTrainerPSO(Trainer):
                  c:             int   = 10,   #patience
                  c_r:           int   = 10,   #restart_patience
                  K:             int   = 10,   #pso_epochs
-                 perturbation_factor: float = 0.3,
-                 **kwargs):
+                 perturbation_factor: float = 0.3):
         
-        super().__init__(model, train_loader, test_loader, optimizer, criterion, device, epochs, learning_rate, **kwargs)
-
+        self.model               = model.to(device)
+        self.train_loader        = train_loader
+        self.test_loader         = test_loader
+        self.optimizer           = self.load_optimizer(optimizer, learning_rate)
+        self.criterion           = criterion
+        self.device              = device
+        self.epochs              = epochs
+        self.step_train          = 0
+        self.step_test           = 0
         self.num_particles       = num_particles
         self.max_iter            = max_iter
         self.K                   = K

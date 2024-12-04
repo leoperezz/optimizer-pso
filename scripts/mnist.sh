@@ -1,1 +1,0 @@
-python ../main.py --dataset mnist --trainer supervised --device cuda:1 --epochs 100 --learning_rate 1e-4
