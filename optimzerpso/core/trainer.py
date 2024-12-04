@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import wandb
 from tqdm import tqdm
 from logger import logger
+from typing import List, Tuple
 
 class Trainer(ABC):
 
@@ -124,16 +125,17 @@ class SupervisedTrainerPSO(Trainer):
                  device: str,
                  epochs: int = 10,
                  learning_rate: float = 1e-3,
-                 num_particles: int = 10,
-                 max_iter: int = 100,
-                 step_length: float = 1.0,
-                 step_length_schedule: float = 0.9,
-                 inertia_weight: float = 0.7,
-                 cognitive_weight: float = 1.5,
-                 social_weight: float = 1.5,
-                 repulsion_weight: float = 2.0,
-                 patience: int = 10,
-                 K: int = 10,
+                 num_particles: int = 20,
+                 max_iter: int = 50,
+                 lambda_factor: float = 0.95, #step_length
+                 phi_lambda: float = 0.95,    #step_length_schedule
+                 phi_v: float = 0.7,          #inertia_weight
+                 phi_p: float = 1.5,          #cognitive_weight
+                 phi_g: float = 1.5,          #social_weight
+                 phi_w: float = 2.0,          #repulsion_weight
+                 c: int = 10,                 #patience
+                 c_r: int = 10,               #restart_patience
+                 K: int = 10,                 #pso_epochs
                  perturbation_factor: float = 0.3):
         
         super().__init__(model, train_loader, test_loader, optimizer, criterion, device, epochs, learning_rate)
@@ -143,13 +145,14 @@ class SupervisedTrainerPSO(Trainer):
         self.K                   = K
         self.interval_pso        = len(self.train_loader) // K
         self.perturbation_factor = perturbation_factor
-        self.patience            = patience
-        self.step_length         = step_length
-        self.step_length_schedule = step_length_schedule
-        self.inertia_weight      = inertia_weight
-        self.cognitive_weight    = cognitive_weight
-        self.social_weight       = social_weight
-        self.repulsion_weight    = repulsion_weight
+        self.lambda_factor       = lambda_factor
+        self.phi_lambda          = phi_lambda
+        self.phi_v               = phi_v
+        self.phi_p               = phi_p
+        self.phi_g               = phi_g
+        self.phi_w               = phi_w
+        self.c                   = c
+        self.c_r                 = c_r
 
 
     def initialize_particles(self):
@@ -166,8 +169,8 @@ class SupervisedTrainerPSO(Trainer):
         particles = [self.model]  
 
         for _ in range(self.num_particles - 1):
-            # Create a new instance of the same model architecture
-            new_particle = type(self.model)(*self.model.__init__args__).to('cpu')
+            
+            new_particle = type(self.model)(*self.model.__init__args__)
             new_particle.load_state_dict(self.model.state_dict())
             
             with torch.no_grad():
@@ -182,33 +185,149 @@ class SupervisedTrainerPSO(Trainer):
             particles.append(new_particle)
         
         return particles
-
-    def pso(self):
+ 
+    def pso(self, batch):
+        """
+        Particle Swarm Optimization for neural network weights
+        Args:
+            batch: Tuple[torch.Tensor, torch.Tensor] - (data, target) for evaluation
+        Returns:
+            None - Updates self.model directly
+        """
+        data, target = batch
+        data, target = data.to(self.device), target.to(self.device)
         
+        # Initialize particles
         particles = self.initialize_particles()
+        velocities = []
+        personal_best = []
+        personal_best_scores = []
+        
+        # Initialize velocities and personal bests
+        for particle in particles:
+            particle = particle.to(self.device)
+            velocity = {name: torch.zeros_like(param, device=self.device) 
+                       for name, param in particle.named_parameters()}
+            velocities.append(velocity)
+            personal_best.append(particle.state_dict())
+            
+            # Evaluate initial position (negative loss as we want to maximize)
+            with torch.no_grad():
+                output = particle(data)
+                score = -self.criterion(output, target).item()
+                personal_best_scores.append(score)
+        
+        # Initialize global best
+        global_best_idx = max(range(len(personal_best_scores)), 
+                             key=lambda i: personal_best_scores[i])
+        global_best = particles[global_best_idx].state_dict()
+        global_best_score = personal_best_scores[global_best_idx]
+        
+        # Initialize global worst
+        global_worst_idx = min(range(len(personal_best_scores)), 
+                              key=lambda i: personal_best_scores[i])
+        global_worst = particles[global_worst_idx].state_dict()
+        
+        # Counter for early stopping
+        unchanged_counter = 0
+        
+        # Main PSO loop
+        for k in tqdm(range(self.max_iter), desc="PSO", total=self.max_iter):
+            # Early stopping check
+            if unchanged_counter >= self.c:
+                break
+            
+            for i in range(self.num_particles):
+                particle = particles[i]
+                
+                # Generate random factors
+                r_v = torch.rand(1).item()
+                r_p = torch.rand(1).item()
+                r_g = torch.rand(1).item()
+                r_w = torch.rand(1).item()
+                
+                # Normalization term
+                C = (r_v * self.phi_v + r_p * self.phi_p + 
+                     r_g * self.phi_g + r_w * self.phi_w)
+                
+                # Update velocity and position for each parameter
+                with torch.no_grad():
+                    for name, param in particle.named_parameters():
+                        # Update velocity
+                        velocities[i][name] = (1/C) * (
+                            r_v * self.phi_v * velocities[i][name] +
+                            r_p * self.phi_p * (personal_best[i][name].to(self.device) - param) +
+                            r_g * self.phi_g * (global_best[name].to(self.device) - param) -
+                            r_w * self.phi_w * (global_worst[name].to(self.device) - param)
+                        )
+                        
+                        # Update position
+                        param.data += self.lambda_factor * velocities[i][name]
+                
+                # Evaluate new position
+                with torch.no_grad():
+                    output = particle(data)
+                    score = -self.criterion(output, target).item()
+                
+                # Update personal best
+                if score > personal_best_scores[i]:
+                    personal_best[i] = particle.state_dict()
+                    personal_best_scores[i] = score
+                
+                # Update global best and worst
+                if score > global_best_score:
+                    global_best = particle.state_dict()
+                    global_best_score = score
+                    unchanged_counter = 0
+                else:
+                    unchanged_counter += 1
+                
+                current_worst_idx = min(range(len(personal_best_scores)), 
+                                      key=lambda i: personal_best_scores[i])
+                global_worst = particles[current_worst_idx].state_dict()
+            
+            # Step length scheduling
+            self.lambda_factor *= self.phi_lambda
+        
+        self.model.load_state_dict(global_best)
+        
+        if hasattr(self.optimizer, 'state'):
+            optimizer_state = self.optimizer.state_dict()
+            if isinstance(self.optimizer, torch.optim.Adam):
+                self.optimizer = torch.optim.Adam(self.model.parameters(), lr=optimizer_state['param_groups'][0]['lr'])
+            elif isinstance(self.optimizer, torch.optim.SGD):
+                self.optimizer = torch.optim.SGD(self.model.parameters(), lr=optimizer_state['param_groups'][0]['lr'])
+            self.optimizer.load_state_dict(optimizer_state)
+        
+        # Clean up memory
+        del particles, velocities, personal_best, personal_best_scores
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
+        return None
 
     def train_step(self):
-
         logger.worker("Training")
-        
         self.model.train()
 
         for data, target in tqdm(self.train_loader,
-                                 desc     = "Training",
-                                 total    = len(self.train_loader),
-                                 colour   = "green"):
+                                desc="Training",
+                                total=len(self.train_loader),
+                                colour="green"):
             
             data, target = data.to(self.device), target.to(self.device)
             self.optimizer.zero_grad()
             output = self.model(data)            
-            loss   = self.criterion(output, target)
+            loss = self.criterion(output, target)
             wandb.log({"loss_train": loss.item()}, step=self.step_train)
             self.step_train += 1
             loss.backward()
             self.optimizer.step()
 
             if self.step_train % self.interval_pso == 0:
-                self.pso()
+                batch = next(iter(self.train_loader))
+                logger.exit("Making PSO ...")
+                self.pso(batch)
 
     def test_step(self):
 
@@ -229,4 +348,7 @@ class SupervisedTrainerPSO(Trainer):
                 self.step_test += 1
 
     def train(self):
-        pass
+        for epoch in range(self.epochs):
+            logger.worker(f"Epoch {epoch + 1} of {self.epochs}")
+            self.train_step()
+            self.test_step()
