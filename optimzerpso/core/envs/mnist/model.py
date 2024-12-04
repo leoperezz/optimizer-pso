@@ -1,6 +1,5 @@
 import torch.nn as nn
 
-
 class MNISTModel(nn.Module):
     
     def __init__(self):

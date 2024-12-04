@@ -37,14 +37,15 @@ class Trainer(ABC):
 class SupervisedTrainer(Trainer):
     
     def __init__(self,
-                 model: nn.Module,
-                 train_loader: DataLoader,
-                 test_loader: DataLoader,
-                 optimizer: str,
-                 criterion: nn.Module,
-                 device: str,
-                 epochs: int = 10,
-                 learning_rate: float = 1e-3):
+                 model:         nn.Module,
+                 train_loader:  DataLoader,
+                 test_loader:   DataLoader,
+                 optimizer:     str,
+                 criterion:     nn.Module,
+                 device:        str,
+                 epochs:        int = 10,
+                 learning_rate: float = 1e-3,
+                 **kwargs):
         
         if optimizer not in ["adam", "sgd"]:
             raise ValueError("Optimizer must be either 'adam' or 'sgd'")
@@ -117,28 +118,29 @@ class SupervisedTrainerPSO(Trainer):
     '''
 
     def __init__(self,
-                 model: nn.Module,
-                 train_loader: DataLoader,
-                 test_loader: DataLoader,
-                 optimizer: str,
-                 criterion: nn.Module,
-                 device: str,
-                 epochs: int = 10,
+                 model:         nn.Module,
+                 train_loader:  DataLoader,
+                 test_loader:   DataLoader,
+                 optimizer:     str,
+                 criterion:     nn.Module,
+                 device:        str,
+                 epochs:        int = 10,
                  learning_rate: float = 1e-3,
                  num_particles: int = 20,
-                 max_iter: int = 50,
+                 max_iter:      int = 50,
                  lambda_factor: float = 0.95, #step_length
-                 phi_lambda: float = 0.95,    #step_length_schedule
-                 phi_v: float = 0.7,          #inertia_weight
-                 phi_p: float = 1.5,          #cognitive_weight
-                 phi_g: float = 1.5,          #social_weight
-                 phi_w: float = 2.0,          #repulsion_weight
-                 c: int = 10,                 #patience
-                 c_r: int = 10,               #restart_patience
-                 K: int = 10,                 #pso_epochs
-                 perturbation_factor: float = 0.3):
+                 phi_lambda:    float = 0.95, #step_length_schedule
+                 phi_v:         float = 0.7,  #inertia_weight
+                 phi_p:         float = 1.5,  #cognitive_weight
+                 phi_g:         float = 1.5,  #social_weight
+                 phi_w:         float = 2.0,  #repulsion_weight
+                 c:             int   = 10,   #patience
+                 c_r:           int   = 10,   #restart_patience
+                 K:             int   = 10,   #pso_epochs
+                 perturbation_factor: float = 0.3,
+                 **kwargs):
         
-        super().__init__(model, train_loader, test_loader, optimizer, criterion, device, epochs, learning_rate)
+        super().__init__(model, train_loader, test_loader, optimizer, criterion, device, epochs, learning_rate, **kwargs)
 
         self.num_particles       = num_particles
         self.max_iter            = max_iter
