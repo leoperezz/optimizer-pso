@@ -1,0 +1,18 @@
+{"time":"2024-12-03T21:59:27.733112185-05:00","level":"INFO","msg":"using version","core version":"0.18.3"}
+{"time":"2024-12-03T21:59:27.733123497-05:00","level":"INFO","msg":"created symlink","path":"/home/lperez/main/optimizer-pso/scripts/wandb/run-20241203_215927-omyzrrrx/logs/debug-core.log"}
+{"time":"2024-12-03T21:59:27.734855837-05:00","level":"ERROR","msg":"dialing: google: could not find default credentials. See https://cloud.google.com/docs/authentication/external/set-up-adc for more information"}
+{"time":"2024-12-03T21:59:27.74278234-05:00","level":"INFO","msg":"created new stream","id":"omyzrrrx"}
+{"time":"2024-12-03T21:59:27.742802187-05:00","level":"INFO","msg":"stream: started","id":"omyzrrrx"}
+{"time":"2024-12-03T21:59:27.742821935-05:00","level":"INFO","msg":"sender: started","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:27.742810553-05:00","level":"INFO","msg":"writer: Do: started","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:27.742820692-05:00","level":"INFO","msg":"handler: started","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:28.156559418-05:00","level":"INFO","msg":"wandb-core","!BADKEY":null}
+{"time":"2024-12-03T21:59:28.157564094-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-03T21:59:28.357725359-05:00","level":"INFO","msg":"stream: closing","id":"omyzrrrx"}
+{"time":"2024-12-03T21:59:28.35776834-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-03T21:59:28.360106293-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-03T21:59:30.359676183-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-03T21:59:30.701665008-05:00","level":"INFO","msg":"handler: closed","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:30.701712127-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:30.701726234-05:00","level":"INFO","msg":"sender: closed","stream_id":{"value":"omyzrrrx"}}
+{"time":"2024-12-03T21:59:30.7018569-05:00","level":"INFO","msg":"stream: closed","id":"omyzrrrx"}

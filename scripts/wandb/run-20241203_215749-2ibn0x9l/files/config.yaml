@@ -1,0 +1,67 @@
+_wandb:
+    value:
+        cli_version: 0.18.3
+        m: []
+        python_version: 3.9.7
+        t:
+            "1":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 55
+                - 105
+            "2":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 55
+                - 105
+            "3":
+                - 16
+                - 23
+                - 55
+            "4": 3.9.7
+            "5": 0.18.3
+            "6": 4.45.2
+            "8":
+                - 5
+            "12": 0.18.3
+            "13": linux-x86_64
+K:
+    value: 10
+c:
+    value: 10
+c_r:
+    value: 10
+dataset:
+    value: mnist
+device:
+    value: cuda:1
+epochs:
+    value: 100
+lambda_factor:
+    value: 0.95
+learning_rate:
+    value: 0.0001
+max_iter:
+    value: 50
+num_particles:
+    value: 20
+optimizer:
+    value: adam
+perturbation_factor:
+    value: 0.3
+phi_g:
+    value: 1.5
+phi_lambda:
+    value: 0.95
+phi_p:
+    value: 1.5
+phi_v:
+    value: 0.7
+phi_w:
+    value: 2
+trainer:
+    value: supervised

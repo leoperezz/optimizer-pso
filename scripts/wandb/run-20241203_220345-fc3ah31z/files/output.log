@@ -1,0 +1,51 @@
+2024-12-03 22:03:45,657 - INFO - [92m👷 WORKER: Epoch 1 of 100[0m
+2024-12-03 22:03:45,657 - INFO - [92m👷 WORKER: Training[0m
+Training:   0%|[32m                                                                                                                                                                                                   [0m| 0/938 [00:00<?, ?it/s][0m
+Traceback (most recent call last):
+  File "/home/lperez/main/optimizer-pso/scripts/../main.py", line 69, in <module>
+    main()
+  File "/home/lperez/main/optimizer-pso/scripts/../main.py", line 66, in main
+    trainer.train()
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/trainer.py", line 100, in train
+    self.train_step()
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/trainer.py", line 72, in train_step
+    output = self.model(data)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/envs/mnist/model.py", line 24, in forward
+    x = self.pool1(self.relu1(self.conv1(x)))
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 460, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 456, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+Traceback (most recent call last):
+  File "/home/lperez/main/optimizer-pso/scripts/../main.py", line 69, in <module>
+    main()
+  File "/home/lperez/main/optimizer-pso/scripts/../main.py", line 66, in main
+    trainer.train()
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/trainer.py", line 100, in train
+    self.train_step()
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/trainer.py", line 72, in train_step
+    output = self.model(data)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/lperez/main/optimizer-pso/optimzerpso/core/envs/mnist/model.py", line 24, in forward
+    x = self.pool1(self.relu1(self.conv1(x)))
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 460, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/lperez/miniconda3/envs/llmrl/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 456, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
